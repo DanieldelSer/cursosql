@@ -1,0 +1,247 @@
+Curso SQL
+
+// Levantar imagenes Docker
+docker compose up -d
+docker compose down
+
+Las " hacen referencia a nombres de tablas
+
+// crear tabla
+create table users (
+	name VARCHAR(10) UNIQUE
+);
+UNIQUE en la columna "name" no se pueden repetir nombres
+
+// insertar
+INSERT INTO users (name)
+values ('Daniel'), ('Sergio'), ('Mikel');
+
+	//poner valores en orden de las columnas sin especificarlas
+		insert into users 
+		values ('maria');
+
+//actualizar update
+ update users set
+	"name" = 'Shaka'
+where
+	"name" = 'Daniel1';
+	
+//Seleccionar registros
+select * from users;
+//* quiere decir todas las columnas
+select * from users limit 2;
+select * from users limit 2 offset 2; -> OFFSET salta ese número de registros
+
+//Clausula WHERE
+select * from users where "name" = 'Daniel';
+select * from users where "name" like 'D%'; -> Empiece por D
+select * from users where "name" like '%1'; -> Termine por 1
+select * from users where "name" like '_aniel'; -> Puede ser cualquier letra
+select * from users where "name" like '_ani%';
+select * from users where "name" like '%a%'; -> contiene la letra a
+select * from users where "name" like '%_a%';
+
+//Eliminar registro
+delete from users where "name"= 'maria';
+
+//Drop
+DROP table users; -> elimina la tabla
+//TRUNCATE
+TRUNCATE table users; borra todos los registros de la tabla
+
+//Operadores de string y funciones
+select upper(name) from users
+select upper(name), lower(name) from users
+select upper(name), lower(name), length(name) as caracter  from users;
+select concat(id, '-', name) from users;
+select id|| '-'|| name as barcode from users;
+
+//Substring y position
+select name, substring(name, 0, 5)  from users; -> Nombre de la columna, posición incial, posición final.
+select name, substring(name, 0, 5), position('E' in name) from users; -> Empieza a contar en 1.
+EJ: select
+	substring(name, 0, position(' ' in name)) as name,
+	substring(name, position(' ' in name) + 1, length(name)) as last_name
+	from users;
+	select
+	substring(name, 0, position(' ' in name)) as name,
+	substring(name, position(' ' in name) + 1) as last_name,
+    	trim(substring(name, position(' ' in name))) as last_name2
+	from users;
+	
+//Tarea
+update users
+	set
+		first_name = substring(name, 0, position(' ' in name)),
+		last_name = substring(name, position(' ' in name) + 1);
+		
+//Tarea
+select first_name, last_name, last_connection from users where last_connection like '221.%';
+select first_name, last_name, followers from users where followers > 4600;
+
+//Operador BETWEEN
+select first_name, last_name, followers from users where followers > 4600 and followers < 4700;
+select first_name, last_name, followers from users where followers > 4600 and followers < 4700 order by followers asc;
+select first_name, last_name, followers from users where followers between  4600 and 4700 order by followers asc;
+
+//Funciones agregadas MAX MIN COUNT ROUND AVG
+select count(*)  from users;
+select count(*), min(followers) as min_followers  from users;
+select count(*), min(followers) as min_followers, max(followers) as max_followers  from users;
+select avg(followers)  from users;
+select round(avg(followers)) from users;
+
+//GROUP BY
+select count(*) , followers from users where followers = 4 or followers = 4999 group by followers;
+select count(*) , followers from users where followers between  4 and 4999 group by followers order by followers asc;
+
+//Exposición, terminología y estructura
+DDL, DML, TCL, DQL
+************************************************************************
+Estructura de un Select where join group by having order by limit offset
+************************************************************************
+
+//HAVING
+select count(*), country  from users group by country having count(*) > 5  order by country asc;
+select count(*), country  from users group by country having count(*) > 5  order by count(*) desc;
+
+//DISTINCT
+select distinct country from users; -> no trae repetidos
+
+//GROUP BY con otras funciones
+select count(*), substring(email, position('@' in email) + 1) as domain  from users group by substring(email, position('@' in email) + 1) having count(*) > 1;
+
+//SubQueries
+select domain, total from (select count(*) as total, substring(email, position('@' in email) + 1) as domain  from users group by substring(email, position('@' in email) + 1)
+having count(*) > 1 order by substring(email, position('@' in email) + 1) asc) as email_domains;
+select sum(total) from (select count(*) as total, substring(email, position('@' in email) + 1) as domain  from users group by substring(email, position('@' in email) + 1)
+having count(*) > 1 order by substring(email, position('@' in email) + 1) asc) as email_domains;
+
+//Tarea
+select count(*) from users where email like '%google.com';
+select distinct country from users where email like '%google.com';
+select count(*), country  from users group by country;
+select first_name, last_name, country, last_connection from users where country = 'Iceland';
+select first_name, last_name, country, last_connection from users where country = 'Iceland' and last_connection like '112.%';
+select first_name, last_name, country, last_connection from users where country = 'Iceland'
+and (last_connection like '112.%' or last_connection like '28.%' or last_connection like '188.%');
+select first_name, last_name, country, last_connection from users where country = 'Iceland'
+and (last_connection like '112.%' or last_connection like '28.%' or last_connection like '188.%') order by last_name asc;
+select first_name, last_name, country, last_connection from users where country = 'Iceland'
+and (last_connection like '112.%' or last_connection like '28.%' or last_connection like '188.%') order by first_name asc;
+select first_name, last_name, country, last_connection from users where country = 'Iceland'
+and (last_connection like '112.%' or last_connection like '28.%' or last_connection like '188.%') order by last_name asc, first_name asc;
+select * from users where country = 'Mexico' or country = 'Honduras' or country = 'Costa Rica' order by country asc;
+select * from users where country in ('Mexico', 'Honduras', 'Costa Rica')
+order by country asc, first_name asc, last_name asc;
+select count(*), country from users where country in ('Mexico', 'Honduras', 'Costa Rica') group by country
+order by country asc;
+
+//Añadir llave primasria
+alter table country add primary key (code); -> Tiene que ser único.
+
+//Constraint - Check
+alter table country add check(surfacearea >= 0);
+
+//Check con múltiples posibilidades strings
+select distinct continent from country;
+alter table country add check((continent = 'Asia') or (continent = 'South America') or (continent = 'North America')
+or (continent = 'Oceania') or (continent = 'Antarctica') or (continent = 'Africa') or (continent = 'Europe'));
+alter table country add check((continent = 'Asia') or (continent = 'South America') or (continent = 'North America')
+or (continent = 'Oceania') or (continent = 'Antarctica') or (continent = 'Africa') or (continent = 'Europe') or (continent = 'Central America'));
+
+//Alter table - Drop constraint
+alter table country drop constraint "country_continent_check";
+
+//Indices de BD
+Mejora la velocidad de lectura de la BD
+create unique index "unique_country_name" on country(name);
+create index "country_continent" on country(continent);
+
+//Tarea
+alter table city add primary key (id);
+alter table city add check(population >= 0);
+alter table countrylanguage add primary key (countrycode, language);
+alter table countrylanguage add check((percentage >= 0) and (percentage <= 100));
+
+//Unique index
+select * from city where name = 'Jinzhou';
+update city set "name" = 'Jinzhou Old' where population = 95761;
+create unique index "unique_name_countrycode_district" on city (name, countrycode, district);
+create index "index_district" on city (district);
+
+// Creando llaves foraneas
+INSERT INTO country
+		values('AFG', 'Afghanistan', 'Asia', 'Southern Asia', 652860, 1919, 40000000, 62, 69000000, NULL, 'Afghanistan', 'Totalitarian', NULL, NULL, 'AF');
+alter table city add constraint fk_country_code foreign key (countrycode) references country(code);
+alter table countrylanguage add constraint fk_country_code foreign key (countrycode) references country(code);
+
+//On delete - Cascade
+delete from country where code = 'AFG';
+
+//Rellenar tabla continent a partir de country
+insert into continent (name) 
+select distinct continent from country order by continent asc;
+
+//Copia de tabla
+insert into country_old
+select * from country;
+
+//Actualizar columna continent con code(id)
+alter table country drop constraint country_continent_check;
+select c.name, c.continent, (select code from continent co where co.name = c.continent) from country c;
+
+update country c set continent = (select code from continent co where co.name = c.continent);
+
+//Cambio de tipo
+alter table country alter column continent type int4
+USING continent::integer;-> A veces se necesita o no
+
+//Ej
+-- Empezar con el select para confirmar lo que vamos a actualizar
+select distinct language from countrylanguage order by language asc;
+insert into language (name) 
+select distinct language from countrylanguage order by language asc;
+-- Actualizar todos los registros
+update countrylanguage cl set language = (select code from language l where l.name = cl.language);
+-- Cambiar tipo de dato en countrylanguage - languagecode por int4
+alter table countrylanguage alter column language type int4
+USING language::integer;
+-- Crear el forening key y constraints de no nulo el language_code
+alter table countrylanguage add constraint fk_language_code FOREIGN KEY (language) references language(code);
+-- Revisar lo creado
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+Sección 7
+
+//Clausula Union
+select *from continent where code in (3, 5);
+select *from continent where name like '%America%';
+
+select *from continent where name like '%America%'
+union 
+select *from continent where code in (3,5) order by name asc;-> Tiene k coincidir el numero de columnas y tipos
+
+//Union de tablas
+-condicion where
+select c.name as country, c2.name as continent from country c, continent c2 where c.continent = c2.code  order by c.name asc;
+-Inner join
+select c."name" as country, c2."name" as continent from country c
+inner join continent c2 on c.continent = c2.code order by c."name" asc;
+
+//Alterar secuencias
+alter sequence continent_code_seq restart with 8;
+
+//Full outer join
+SELECT a."name", a.continent as continentCode, b."name" as continentName FROM country a
+FULL OUTER JOIN continent b 
+ON a.continent = b.code order by a."name" asc;
+
+//Right outer join
+SELECT b.code, b."name" 
+FROM country a
+RIGHT JOIN continent b 
+ON a.continent = b.code
+WHERE a.continent IS null;
+
+//Aggregations + joins
