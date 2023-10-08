@@ -245,3 +245,63 @@ ON a.continent = b.code
 WHERE a.continent IS null;
 
 //Aggregations + joins
+-select count(*), continent from country group by continent order by  continent  asc;
+-select count(*),  b."name" from country a inner join continent b
+on a.continent = b.code group by b."name" order by count(*) asc;
+-select count(*), continent from country group by continent order by  continent  asc;
+-select count(*),  b."name" from country a FULL OUTER join continent b
+on a.continent = b.code group by b."name"  order by  count(*)  asc;
+-select count(*) as count,  b."name" from country a inner join continent b
+on a.continent = b.code group by b."name"
+union
+select 0, b."name" from country a right join continent b on a.continent = b.code
+where a.continent is null group by b."name" order by count;
+
+//Ej count union
+select count(*) as total, b."name" from country a
+inner join continent b on a.continent = b.code
+where b.name not like '%America%'
+group by b."name"
+union
+select count(*) as total, 'America' from country a
+inner join continent b on a.continent = b.code
+where b.name like '%America%' order by total asc;
+
+//Ej pais con más ciudades
+select count(*) as total , b.name from city a
+inner join country b on a.countrycode = b.code
+group by b."name" order by total desc limit 1;
+
+//Multiples joins con agrupaciones
+-select distinct a."language", c.name from countrylanguage a
+inner join country b on a.countrycode = b.code
+inner join continent c on b.continent = c.code 
+where isofficial is true;
+
+-select count(*) as total, continent from (
+select distinct a."language", c.name as continent from countrylanguage a
+inner join country b on a.countrycode = b.code
+inner join continent c on b.continent = c.code 
+where isofficial is true
+) as totales group by continent order by total;
+
+//Más joins
+-select distinct a."language", l.name, a.languagecode,  c.name as continent from countrylanguage a
+inner join country b on a.countrycode = b.code
+inner join continent c on b.continent = c.code
+inner join "language" l on l.code = a.languagecode
+where isofficial is true;
+
+//Ej
+-select count(*),b.languagecode, b."language" from country a
+inner join countrylanguage b on a.code = b.countrycode 
+where a.continent = 5 and b.isofficial is true
+group by b.languagecode, b."language" order by count(*) desc limit 1;
+
+-select * from country a
+inner join countrylanguage b on a.code = b.countrycode 
+where a.continent = 5 and b.isofficial is true and b.languagecode = 135;
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+Seccion 8
+//Queries - Fechas, intervalos y funciones sobre fechas
